@@ -35,13 +35,28 @@ export function Rig({ gridW, gridH }) {
 
     useEffect(() => {
         const canvas = gl.domElement;
+        canvas.style.touchAction = "none";
         let isDown = false;
         let startX = 0;
         let startY = 0;
         let initialRigX = 0;
         let initialRigY = 0;
         let maxDragDistance = 0; // Track max distance for click detection
+        const pointers = new Map();
+        let pinch = null;
+        const pointerDistance = () => {
+            const pts = [...pointers.values()];
+            if (pts.length < 2) return 0;
+            return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        };
         const onDown = (e) => {
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.size >= 2) {
+                isDown = false;
+                pinch = { dist: pointerDistance(), zoom: rigState.zoom };
+                rigState.isDragging = true;
+                return;
+            }
             isDown = true;
             startX = e.clientX;
             startY = e.clientY;
@@ -52,6 +67,18 @@ export function Rig({ gridW, gridH }) {
             canvas.style.cursor = "grabbing";
         };
         const onMove = (e) => {
+            if (pointers.has(e.pointerId)) {
+                pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            }
+            if (pinch && pointers.size >= 2) {
+                const dist = Math.max(pointerDistance(), 1);
+                const next = pinch.zoom * (pinch.dist / dist);
+                rigState.zoom = Math.min(
+                    CONFIG.zoomOut,
+                    Math.max(CONFIG.zoomIn, next)
+                );
+                return;
+            }
             if (!isDown) return;
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
@@ -98,7 +125,10 @@ export function Rig({ gridW, gridH }) {
             );
             rigState.target.set(rawTargetX, rawTargetY, 0);
         };
-        const onUp = () => {
+        const onUp = (e) => {
+            if (e?.pointerId != null) pointers.delete(e.pointerId);
+            if (pointers.size < 2) pinch = null;
+            if (pointers.size === 0) rigState.isDragging = false;
             if (!isDown) return; // Ignore spurious events
             isDown = false;
             rigState.isDragging = false;

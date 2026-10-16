@@ -593,12 +593,54 @@
   }
 
   .mldm_logo {
-    top: 1.25rem;
-    left: 1.5rem;
+    top: max(1.15rem, calc(env(safe-area-inset-top) + 0.7rem));
+    left: max(1rem, env(safe-area-inset-left));
   }
 
   .mldm_toggle {
-    top: 1.25rem;
-    right: 1.5rem;
+    top: max(0.55rem, env(safe-area-inset-top));
+    right: max(0.75rem, env(safe-area-inset-right));
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+    justify-content: flex-end;
+  }
+
+  .mldm_panel {
+    top: calc(4.25rem + env(safe-area-inset-top));
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .mldm_panel_inner {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1.5rem 1.25rem;
+  }
+
+  .mldm_primary {
+    min-height: 44px;
+    padding: 0.15rem 0;
+  }
+
+  .mldm_back {
+    top: 1rem;
+    left: 1.25rem;
+    min-height: 44px;
+  }
+}
+
+@media (max-height: 500px) {
+  .mldm_panel {
+    top: calc(3.25rem + env(safe-area-inset-top));
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .mldm_panel_inner {
+    overflow-y: auto;
+    padding: 1rem 1.1rem;
+  }
+
+  .mldm_primary_label {
+    font-size: 1.5rem;
   }
 }

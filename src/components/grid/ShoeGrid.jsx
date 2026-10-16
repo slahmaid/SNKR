@@ -55,14 +55,16 @@ export default function ShoeGrid() {
     // Responsive zoom for mobile viewports
     useEffect(() => {
         const updateResponsiveZoom = () => {
-            const width = window.innerWidth;
+            const viewport = window.visualViewport;
+            const width = viewport?.width ?? window.innerWidth;
+            const height = viewport?.height ?? window.innerHeight;
             let newZoomOut;
-            if (width < 480) {
-                newZoomOut = 48; // Phone
-            } else if (width < 768) {
-                newZoomOut = 38; // Tablet portrait
+            if (width < 390) {
+                newZoomOut = 46;
+            } else if (width < 768 || height < 500) {
+                newZoomOut = height < 500 ? 34 : 38;
             } else {
-                newZoomOut = DEFAULT_CONFIG.zoomOut; // Desktop default (31)
+                newZoomOut = DEFAULT_CONFIG.zoomOut;
             }
             CONFIG.zoomOut = newZoomOut;
             // Only update current zoom if we're in zoomed-out state
@@ -73,7 +75,11 @@ export default function ShoeGrid() {
         };
         updateResponsiveZoom();
         window.addEventListener("resize", updateResponsiveZoom);
-        return () => window.removeEventListener("resize", updateResponsiveZoom);
+        window.visualViewport?.addEventListener("resize", updateResponsiveZoom);
+        return () => {
+            window.removeEventListener("resize", updateResponsiveZoom);
+            window.visualViewport?.removeEventListener("resize", updateResponsiveZoom);
+        };
     }, []);
 
     // Filter state for Nike collection
@@ -209,13 +215,12 @@ export default function ShoeGrid() {
     return (
         <div
             style={{
-                width: "100vw",
-                height: "100vh",
-                minHeight: "100dvh",
+                width: "100%",
+                height: "100dvh",
                 backgroundColor: "#f0f0f0",
                 position: "relative",
                 overflow: "hidden",
-                touchAction: "none", // Prevent mobile browser touch gestures
+                touchAction: "none",
             }}
         >
             <CartTab
@@ -259,7 +264,7 @@ export default function ShoeGrid() {
             />
             <Canvas
                 camera={{ position: [0, 0, initialZoom], fov: 45 }}
-                dpr={[1, 2]}
+                dpr={[1, Math.min(window.innerWidth < 900 ? 1.5 : 2, window.devicePixelRatio || 1)]}
                 gl={{
                     antialias: true,
                     toneMapping: THREE.NoToneMapping,

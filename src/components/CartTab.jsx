@@ -11,8 +11,14 @@ export default function CartTab({ count = 0, onClick }) {
     const button = buttonRef.current;
     if (!button) return;
 
+    const safeProbe = document.createElement("div");
+    safeProbe.style.cssText =
+      "position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+    document.body.appendChild(safeProbe);
+
     const place = () => {
-      if (window.innerWidth > 768) {
+      const mobile = window.matchMedia("(max-width: 900px), (max-height: 500px)").matches;
+      if (!mobile) {
         button.style.width = "";
         button.style.height = "";
         button.style.right = "";
@@ -24,14 +30,24 @@ export default function CartTab({ count = 0, onClick }) {
       const bar = document.querySelector(".control-bar-island");
       if (!bar) return;
       const barRect = bar.getBoundingClientRect();
-      const edge = 4;
-      const gutter = window.innerWidth - barRect.right;
-      const size = Math.min(barRect.height, Math.max(0, Math.floor(gutter - edge)));
+      const safe = getComputedStyle(safeProbe);
+      const safeRight = parseFloat(safe.paddingRight) || 0;
+      const safeBottom = parseFloat(safe.paddingBottom) || 0;
+      const viewport = window.visualViewport;
+      const width = viewport?.width ?? window.innerWidth;
+      const height = viewport?.height ?? window.innerHeight;
+      const edge = Math.max(4, safeRight);
+      const gutter = width - barRect.right;
+      const room = Math.floor(gutter - edge);
+      const size = Math.max(32, Math.min(barRect.height, room));
       button.style.width = `${size}px`;
       button.style.height = `${size}px`;
       button.style.right = `${edge}px`;
-      button.style.bottom = `${window.innerHeight - barRect.bottom + (barRect.height - size) / 2}px`;
-      button.style.fontSize = `${Math.max(11, Math.round(size * 0.3))}px`;
+      button.style.bottom = `${Math.max(
+        safeBottom,
+        height - barRect.bottom + (barRect.height - size) / 2
+      )}px`;
+      button.style.fontSize = `${Math.max(10, Math.round(size * 0.28))}px`;
     };
 
     place();
@@ -39,9 +55,12 @@ export default function CartTab({ count = 0, onClick }) {
     const observer = new ResizeObserver(place);
     if (bar) observer.observe(bar);
     window.addEventListener("resize", place);
+    window.visualViewport?.addEventListener("resize", place);
     return () => {
       observer.disconnect();
+      safeProbe.remove();
       window.removeEventListener("resize", place);
+      window.visualViewport?.removeEventListener("resize", place);
     };
   }, []);
 
@@ -59,7 +78,7 @@ export default function CartTab({ count = 0, onClick }) {
         { scale: 0 },
         { scale: 1, duration: 0.8, ease: "elastic.out(1.3, 0.9)" }
       );
-      if (label && window.innerWidth > 768) {
+      if (label && window.innerWidth > 900 && window.innerHeight > 500) {
         gsap.fromTo(label, { x: 0 }, { x: 3, duration: 0.4, ease: "power2.out" });
       }
     } else if (count > previousCount.current) {
@@ -116,7 +135,7 @@ export default function CartTab({ count = 0, onClick }) {
         .cart-tab-label {
           display: inline-block;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 900px), (max-height: 500px) {
           .cart-tab {
             left: auto;
             right: 14px;

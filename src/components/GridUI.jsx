@@ -171,7 +171,7 @@ export function UnifiedControlBar({
               />
 
               {/* Collection Tabs Group */}
-              <div style={{ display: "flex", gap: "2px" }}>
+              <div className="collection-tabs" style={{ display: "flex", gap: "2px" }}>
                 {collections.map((name, index) => {
                   const isActive =
                     currentCollection === index;
@@ -308,50 +308,72 @@ export function UnifiedControlBar({
             height: 44px !important;
           }
         }
-        @media (max-width: 768px) {
+        @media (max-width: 900px), (max-height: 500px) {
           .control-bar-container {
-            bottom: 20px !important;
+            bottom: max(12px, env(safe-area-inset-bottom)) !important;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
           }
           .control-bar-island {
-            height: 48px !important;
+            height: 52px !important;
             padding: 4px !important;
-            max-width: calc(100vw - 20px);
+            max-width: calc(100vw - 96px - env(safe-area-inset-left) - env(safe-area-inset-right));
           }
           .expanded-mode {
             max-width: 100%;
+            min-width: 0;
+          }
+          .collection-tabs {
+            min-width: 0;
             overflow-x: auto;
             scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
           }
-          .expanded-mode::-webkit-scrollbar {
+          .collection-tabs::-webkit-scrollbar {
             display: none;
+          }
+          .control-button {
+            width: 44px !important;
+            height: 44px !important;
+            flex-shrink: 0;
+          }
+          .tab-button {
+            min-height: 40px;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+          }
+          .filter-chip {
+            min-height: 36px;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
           }
           .desktop-filters {
             display: none !important;
           }
           .mobile-filters {
             display: flex !important;
+            bottom: calc(74px + env(safe-area-inset-bottom)) !important;
           }
         }
-        @media (max-width: 480px) {
-          .control-bar-container {
-            bottom: 16px !important;
-          }
-          .control-bar-island {
-            height: 44px !important;
-          }.control-button {
-            width: 36px !important;
-            height: 36px !important;
-          }
+        @media (max-width: 380px) {
           .tab-button {
-            padding: 6px 10px !important;
+            padding: 8px 9px !important;
             font-size: 12px !important;
           }
           .filter-chip {
-            padding: 4px 8px !important;
-            font-size: 11px !important;
+            padding: 8px 10px !important;
+            font-size: 12px !important;
+          }
+        }
+        @media (max-height: 500px) {
+          .control-bar-container {
+            bottom: max(8px, env(safe-area-inset-bottom)) !important;
+          }
+          .control-bar-island {
+            height: 44px !important;
           }
           .mobile-filters {
-            bottom: 60px !important;
+            bottom: calc(58px + env(safe-area-inset-bottom)) !important;
           }
         }
       `}</style>

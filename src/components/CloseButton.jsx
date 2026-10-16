@@ -69,6 +69,12 @@ export function CloseButton({
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.015); }
           }
+          @media (max-width: 900px), (max-height: 500px) {
+            .shoe-close {
+              width: 44px !important;
+              height: 44px !important;
+            }
+          }
         `}
       </style>
       <button
@@ -86,6 +92,7 @@ export function CloseButton({
             canvasRef.current.style.cursor = "grab";
           }
         }}
+        className="shoe-close"
         style={{
           width: "32px",
           height: "32px",
