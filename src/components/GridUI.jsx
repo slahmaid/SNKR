@@ -52,7 +52,7 @@ export function UnifiedControlBar({
         - borderRadius: 32px is standard for pill shapes
       */}
       <motion.div
-        className={`control-bar-island ${hasActiveSelection ? "buy-mode" : ""}`}
+        className={`control-bar-island ${hasActiveSelection ? "buy-mode" : ""} ${isZoomedIn ? "zoomed-mode" : ""}`}
         layout
         transition={islandTransition}
         style={{
@@ -78,6 +78,7 @@ export function UnifiedControlBar({
           pointerEvents: "auto",
           height: hasActiveSelection ? "auto" : "56px",
           overflow: hasActiveSelection ? "visible" : "hidden", // Crucial for clipping content during resize
+          justifyContent: isZoomedIn ? "center" : "initial",
         }}
       >
         {/* 
@@ -290,6 +291,9 @@ export function UnifiedControlBar({
         .mobile-filters {
           display: none !important;
         }
+        .control-bar-island.zoomed-mode {
+          min-width: 360px;
+        }
         @media (max-height: 800px) {
           .control-bar-container {
             bottom: 24px !important;
@@ -317,7 +321,7 @@ export function UnifiedControlBar({
           .control-bar-island {
             height: 52px !important;
             padding: 4px !important;
-            max-width: calc(100vw - 96px - env(safe-area-inset-left) - env(safe-area-inset-right));
+            max-width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
           }
           .expanded-mode {
             max-width: 100%;
@@ -365,6 +369,28 @@ export function UnifiedControlBar({
             font-size: 12px !important;
           }
         }
+        @media (max-width: 767px) {
+          .control-bar-container {
+            bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+          }
+          .control-bar-island {
+            width: max-content;
+            max-width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
+          }
+          .control-bar-island.zoomed-mode {
+            width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
+            min-width: 0;
+          }
+          .collection-tabs {
+            flex: 0 1 auto;
+            justify-content: flex-start;
+            gap: 0 !important;
+            overflow: visible;
+          }
+          .tab-button { min-height: 44px; }
+          /* Three centered mobile controls with matching 16px vertical gaps. */
+          .mobile-filters { bottom: calc(68px + env(safe-area-inset-bottom)) !important; }
+        }
         @media (max-height: 500px) {
           .control-bar-container {
             bottom: max(8px, env(safe-area-inset-bottom)) !important;
@@ -375,6 +401,48 @@ export function UnifiedControlBar({
           .mobile-filters {
             bottom: calc(58px + env(safe-area-inset-bottom)) !important;
           }
+        }
+        @media (max-width: 380px) {
+          .control-bar-island:not(.zoomed-mode) {
+            width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+            max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+          }
+          .control-button {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .tab-button {
+            min-height: 40px;
+            padding: 7px 5px !important;
+            font-size: 11px !important;
+            letter-spacing: -0.03em;
+          }
+          .filter-chip {
+            min-height: 34px;
+            padding: 7px 8px !important;
+            font-size: 11px !important;
+          }
+          .mobile-filters { bottom: calc(68px + env(safe-area-inset-bottom)) !important; }
+        }
+        @media (max-width: 767px) and (orientation: landscape) {
+          .control-bar-container {
+            bottom: calc(44px + env(safe-area-inset-bottom)) !important;
+          }
+          .control-bar-island {
+            height: 44px !important;
+          }
+          .control-button { width: 36px !important; height: 36px !important; }
+          .tab-button { min-height: 36px; padding: 6px 8px !important; }
+          .mobile-filters { bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+        }
+        @media (max-height: 500px) and (max-width: 900px) {
+          .control-bar-container {
+            bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+          }
+          .control-bar-island {
+            height: 44px !important;
+          }
+          .mobile-filters { bottom: calc(60px + env(safe-area-inset-bottom)) !important; }
         }
       `}</style>
     </div>

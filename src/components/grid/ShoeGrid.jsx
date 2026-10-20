@@ -16,6 +16,8 @@ import { GridCanvas } from "./GridCanvas";
 import { UnifiedControlBar } from "../GridUI";
 import MultiLevelDrawerMenu from "../menu/MultiLevelDrawerMenu";
 import CartTab from "../CartTab";
+import { flyImagesToCart } from "../flyToCart";
+import gsap from "gsap";
 import { TopologyBackground } from "../TopologyBackground";
 import "../HoloCardMaterial"; // Registers <holoCardMaterial /> with R3F
 
@@ -52,20 +54,20 @@ export default function ShoeGrid() {
     }, []);
     const isZoomedIn = currentZoom <= CONFIG.zoomIn + 0.5;
 
-    // Responsive zoom for mobile viewports
+    // Pull the camera back on narrow screens so the outer columns stay fully inside the frame.
     useEffect(() => {
         const updateResponsiveZoom = () => {
-            const viewport = window.visualViewport;
-            const width = viewport?.width ?? window.innerWidth;
-            const height = viewport?.height ?? window.innerHeight;
-            let newZoomOut;
-            if (width < 390) {
-                newZoomOut = 46;
-            } else if (width < 768 || height < 500) {
-                newZoomOut = height < 500 ? 34 : 38;
-            } else {
-                newZoomOut = DEFAULT_CONFIG.zoomOut;
-            }
+            const width = window.innerWidth;
+            const height = window.innerHeight || 1;
+            const aspect = width / height;
+            const spacing = DEFAULT_CONFIG.itemSize + DEFAULT_CONFIG.gap;
+            const gridWidth = DEFAULT_CONFIG.gridCols * spacing;
+            const margin = DEFAULT_CONFIG.itemSize * 0.85;
+            const fov = (45 * Math.PI) / 180;
+            const fitZoom =
+                (gridWidth + margin * 2) /
+                (2 * Math.tan(fov / 2) * aspect);
+            const newZoomOut = Math.max(DEFAULT_CONFIG.zoomOut, fitZoom);
             CONFIG.zoomOut = newZoomOut;
             // Only update current zoom if we're in zoomed-out state
             if (rigState.zoom > CONFIG.zoomIn + 2) {
@@ -75,11 +77,7 @@ export default function ShoeGrid() {
         };
         updateResponsiveZoom();
         window.addEventListener("resize", updateResponsiveZoom);
-        window.visualViewport?.addEventListener("resize", updateResponsiveZoom);
-        return () => {
-            window.removeEventListener("resize", updateResponsiveZoom);
-            window.visualViewport?.removeEventListener("resize", updateResponsiveZoom);
-        };
+        return () => window.removeEventListener("resize", updateResponsiveZoom);
     }, []);
 
     // Filter state for Nike collection
@@ -202,25 +200,31 @@ export default function ShoeGrid() {
         filteredItemCount
     );
 
-    const addToCart = (item) => {
+    const addToCart = (item, origin) => {
         if (!item) return;
         const id = item.product_url;
-        setCartItems((items) =>
-            items.some((entry) => entry.id === id)
-                ? items
-                : [...items, { id, title: item.title }]
-        );
+        if (origin) flyImagesToCart({ imageUrl: item.image_url, origin });
+        const commit = () => {
+            setCartItems((items) =>
+                items.some((entry) => entry.id === id)
+                    ? items
+                    : [...items, { id, title: item.title }]
+            );
+        };
+        if (origin) gsap.delayedCall(0.6, commit);
+        else commit();
     };
 
     return (
         <div
             style={{
-                width: "100%",
-                height: "100dvh",
+                width: "100vw",
+                height: "100vh",
+                minHeight: "100dvh",
                 backgroundColor: "#f0f0f0",
                 position: "relative",
                 overflow: "hidden",
-                touchAction: "none",
+                touchAction: "none", // Prevent mobile browser touch gestures
             }}
         >
             <CartTab
@@ -264,7 +268,7 @@ export default function ShoeGrid() {
             />
             <Canvas
                 camera={{ position: [0, 0, initialZoom], fov: 45 }}
-                dpr={[1, Math.min(window.innerWidth < 900 ? 1.5 : 2, window.devicePixelRatio || 1)]}
+                dpr={[1, 2]}
                 gl={{
                     antialias: true,
                     toneMapping: THREE.NoToneMapping,

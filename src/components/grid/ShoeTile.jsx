@@ -7,23 +7,11 @@ import React, {
 } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useTexture, Text, Html } from "@react-three/drei";
-import { flyImagesToCart } from "../flyToCart";
 import * as THREE from "three";
 import { easing } from "maath";
 import { CONFIG } from "./gridConfig";
 import { rigState } from "./gridState";
 import { CloseButton } from "../CloseButton";
-
-function projectMeshCenter(mesh, camera, gl) {
-    const rect = gl.domElement.getBoundingClientRect();
-    const center = new THREE.Vector3();
-    new THREE.Box3().setFromObject(mesh).getCenter(center);
-    center.project(camera);
-    return {
-        x: rect.left + (center.x * 0.5 + 0.5) * rect.width,
-        y: rect.top + (-center.y * 0.5 + 0.5) * rect.height,
-    };
-}
 
 function AddToCartButton({ product, onAdd }) {
     const [shown, setShown] = useState(false);
@@ -41,7 +29,6 @@ function AddToCartButton({ product, onAdd }) {
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
                 event.stopPropagation();
-                if (added) return;
                 onAdd?.(product);
                 setAdded(true);
             }}
@@ -70,11 +57,11 @@ export function ShoeTile({
     gridHeight,
     onAddToCart,
 }) {
+    const { camera, gl } = useThree();
     const ref = useRef();
     const imageRef = useRef();
     const titleRef = useRef();
     const priceRef = useRef();
-    const { camera, gl } = useThree();
     const [hovered, setHovered] = useState(false);
     const texture = useTexture(data.image_url);
     // Animation Refs
@@ -542,15 +529,18 @@ export function ShoeTile({
                             <AddToCartButton
                                 product={data}
                                 onAdd={(product) => {
-                                    const mesh = imageRef.current;
-                                    const origin = mesh
-                                        ? projectMeshCenter(mesh, camera, gl)
-                                        : null;
-                                    flyImagesToCart({
-                                        imageUrl: product.image_url,
-                                        origin,
+                                    if (!ref.current) {
+                                        onAddToCart?.(product);
+                                        return;
+                                    }
+                                    const point = new THREE.Vector3();
+                                    ref.current.getWorldPosition(point);
+                                    point.project(camera);
+                                    const bounds = gl.domElement.getBoundingClientRect();
+                                    onAddToCart?.(product, {
+                                        x: bounds.left + (point.x * 0.5 + 0.5) * bounds.width,
+                                        y: bounds.top + (-point.y * 0.5 + 0.5) * bounds.height,
                                     });
-                                    onAddToCart?.(product);
                                 }}
                             />
                         </Html>

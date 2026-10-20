@@ -621,7 +621,7 @@ export default function MultiLevelDrawerMenu({
         aria-modal="true"
         aria-label="Navigation"
         aria-hidden="true"
-        inert=""
+        inert={true}
       >
         {/* Scrim */}
         <button
